@@ -9,6 +9,7 @@ typedef struct{
         void* top;
         int count;
         int progs;
+	int mdestruct;
 } stack_h;
 
 /* Attach (create if needed) shared memory stack to the process.
