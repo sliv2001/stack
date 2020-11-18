@@ -6,7 +6,7 @@ extern struct stack_t;
 
 typedef struct{
         int size;
-        void* top;
+        int top;
         int count;
         int progs;
 	int mdestruct;
@@ -33,7 +33,7 @@ int get_count(struct stack_t* stack);
 int push(struct stack_t* stack, void* val);
 
 /* Pop val from stack into memory */
-int pop(struct stack_t* stack, void** val);
+int pop(struct stack_t* stack, void* val);
 
 //---------------------------------------------
 /* Additional tasks */

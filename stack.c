@@ -25,7 +25,7 @@ struct stack_t* attach_stack(key_t key, int size){
 		return NULL;
 	if (newStack) {
 		s.size = size;
-		s.top = (void*)sizeof(stack_h);
+		s.top = sizeof(stack_h);
 		s.count = 0;
 		s.progs = 0;
 		s.mdestruct = 0;
@@ -59,6 +59,43 @@ int mark_destruct(struct stack_t* stack){
 	return wrStack(s, (void*)stack);
 }
 
+int get_size(struct stack_t* stack){
+	stack_h s;
+	s = *((stack_h*)stack);
+	return s.size*elemcount;
+}
+
+int get_count(struct stack_t* stack){
+	stack_h s;
+	s = *((stack_h*)stack);
+	return s.count*s.size;
+}
+
+int push(struct stack_t* stack, void* val){
+	stack_h s;
+	int i;
+	s = *((stack_h*)stack);
+	for (i=0; i<s.size; i++){
+		*((char*)stack+s.top+i) = *((char*)val+i);
+	}
+	s.count++;
+	s.top+=s.size;
+	*((stack_h*)stack) = s;
+	return 0;
+}
+
+int pop(struct stack_t* stack, void* val){
+	stack_h s;
+	int i;
+	s = *((stack_h*)stack);
+	for (i=0; i<s.size; i++){
+		*((char*)val+i) = *((char*)stack+s.top+i);
+	}
+	s.count--;
+	s.top-=s.size;
+	*((stack_h*)stack) = s;
+	return 0;
+}
 
 int main(int argc, char** argv){
 	return 0;
