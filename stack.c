@@ -16,7 +16,7 @@ struct stack_t* attach_stack(key_t key, int size){
 	int newStack=1;
 	struct shmid_ds str;
 	stack_h s;
-	shmem = shmget(key, elemcount*size+sizeof(stack_h), 0600);  //здесь можно поправить длину памяти
+	shmem = shmget(key, elemcount*size+sizeof(stack_h), IPC_CREAT|0666);  //здесь можно поправить длину памяти
 	if (shmem==(-1)) {
 		return NULL;
 	}
@@ -91,19 +91,22 @@ int pop(struct stack_t* stack, void* val){
 	stack_h s;
 	int i;
 	s = *((stack_h*)stack);
+	s.top-=s.size;
 	for (i=0; i<s.size; i++){
 		*((char*)val+i) = *((char*)stack+s.top+i);
 	}
 	s.count--;
-	s.top-=s.size;
 	*((stack_h*)stack) = s;
 	return 0;
 }
 
 int main(int argc, char** argv){
 	key_t key = ftok("ipc", 0);
+	int la, i1=2020;
 	struct stack_t* stack = attach_stack(key, 4);
 	if (stack == NULL) return -1;
+	push(stack, &i1);
+	pop(stack, &la);
 	mark_destruct(stack);
 	detach_stack(stack);
 	return 0;
