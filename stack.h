@@ -4,8 +4,15 @@
 
 extern struct stack_t;
 
+typedef struct{
+        int size;
+        void* top;
+        int count;
+        int progs;
+} stack_h;
+
 /* Attach (create if needed) shared memory stack to the process.
-Returns stack_t* in case of success. Returns NULL on failure. */
+Returns stack_h* in case of success. Returns NULL on failure. */
 struct stack_t* attach_stack(key_t key, int size);
 
 /* Detaches existing stack from process. 
