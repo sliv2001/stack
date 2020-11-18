@@ -2,6 +2,8 @@
 
 const size_t elemcount = 100000;
 
+
+
 int shmem = -1;
 
 int wrStack(stack_h s, void* addr) {
@@ -12,16 +14,17 @@ int wrStack(stack_h s, void* addr) {
 struct stack_t* attach_stack(key_t key, int size){
 	void* addr;
 	int newStack=1;
+	struct shmid_ds str;
 	stack_h s;
-	shmem = shmget(key, elemcount*size+sizeof(stack_h), IPC_CREAT|IPC_EXCL);  //здесь можно поправить длину памяти
+	shmem = shmget(key, elemcount*size+sizeof(stack_h), 0600);  //здесь можно поправить длину памяти
 	if (shmem==(-1)) {
-		shmem = shmget(key, elemcount*size+sizeof(stack_h), IPC_CREAT);
-		newStack = 0;
-		if (shmem==(-1))
-			return NULL;
+		return NULL;
 	}
 	addr = shmat(shmem, 0, 0);
-	if (addr == NULL) 
+	shmctl(shmem, IPC_STAT, &str);
+	if (str.shm_cpid!=getpid())
+		newStack=0;
+	if (addr == (void*)-1)
 		return NULL;
 	if (newStack) {
 		s.size = size;
@@ -98,5 +101,10 @@ int pop(struct stack_t* stack, void* val){
 }
 
 int main(int argc, char** argv){
+	key_t key = ftok("ipc", 0);
+	struct stack_t* stack = attach_stack(key, 4);
+	if (stack == NULL) return -1;
+	mark_destruct(stack);
+	detach_stack(stack);
 	return 0;
 }
