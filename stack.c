@@ -36,6 +36,17 @@ int rdStack(stack_h* s, struct stack_t* stack, void* addr) {
 	return 0;
 }
 
+int initSem(int sem){
+	union semun {
+               int              val;
+               struct semid_ds *buf;
+               unsigned short  *array;
+               struct seminfo  *__buf;
+        } s;
+	s.val = 1;
+	return semctl(sem, 0, SETVAL, s);
+}
+
 struct stack_t* attach_stack(key_t key, int size){
 	void* addr;
 	int newStack=1;
@@ -52,8 +63,8 @@ struct stack_t* attach_stack(key_t key, int size){
 	stack = (struct stack_t*)malloc(sizeof(struct stack_t));
 	stack->shmem = shmem;
 	stack->sem = sem;
-	stack->addr = addr;
 	addr = shmat(shmem, 0, 0);
+	stack->addr = addr;
 	shmctl(shmem, IPC_STAT, &str);
 	if (str.shm_cpid!=getpid())
 		newStack=0;
@@ -65,6 +76,7 @@ struct stack_t* attach_stack(key_t key, int size){
 		s.count = 0;
 		s.progs = 0;
 		s.mdestruct = 0;
+		initSem(sem);
 		wrStack(s, stack, addr);
 	}
 	rdStack(&s, stack, addr);
@@ -82,8 +94,8 @@ int detach_stack(struct stack_t* stack){
 	rdStack(&s, stack, stack->addr);
 	s.progs--;
 	wrStack(s, stack, (void*)stack->addr);
-	semctl(stack->sem, 0, IPC_RMID);
 	if (s.mdestruct&&s.progs == 0){
+		semctl(stack->sem, 0, IPC_RMID);
 		return shmctl(stack->shmem, IPC_RMID, NULL);
 	}
 	else
