@@ -1,3 +1,6 @@
+#ifndef STACK_H
+#define STACK_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/shm.h>
@@ -52,7 +55,4 @@ val == 1  Operations wait timeout time.
 */
 //int set_wait(int val, timespec* timeout);
 
-
-
-
-
+#endif
