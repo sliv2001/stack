@@ -3,8 +3,13 @@
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/sem.h>
 
-extern struct stack_t;
+struct stack_t{
+	int shmem;
+	int sem;
+	void* addr;
+};
 
 typedef struct{
         int size;
