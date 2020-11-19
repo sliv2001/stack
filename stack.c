@@ -1,3 +1,4 @@
+#include <signal.h>
 #include "stack.h"
 
 /*TODO добавить обработку сигналов */
@@ -166,17 +167,5 @@ int pop(struct stack_t* stack, void* val){
 	semb.sem_flg = 0;
 	if (semop(stack->sem, &semb, 1)<0)
 		return 1;
-	return 0;
-}
-
-int main(int argc, char** argv){
-	key_t key = ftok("ipc", 0);
-	int la, i1=2020;
-	struct stack_t* stack = attach_stack(key, 4);
-	if (stack == NULL) return -1;
-	push(stack, &i1);
-	pop(stack, &la);
-	mark_destruct(stack);
-	detach_stack(stack);
 	return 0;
 }
