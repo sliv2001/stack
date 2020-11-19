@@ -1,11 +1,12 @@
 #include "stack.h"
 
 int main(int argc, char** argv){
-        key_t key = ftok("ipc", 0);
+        key_t key = ftok(argv[1], 0);
         int la, i1=2020, i=0;
 	char a;
         struct stack_t* stack = attach_stack(key, 1);
-	char* str = argv[1];
+	char* str = argv[2];
+	if (argc<3) return -1;
         if (stack == NULL) return -1;
 	while ((a=str[i])!=0){
 		i++;
