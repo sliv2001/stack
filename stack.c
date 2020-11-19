@@ -1,7 +1,4 @@
-#include <signal.h>
 #include "stack.h"
-
-/*TODO добавить обработку сигналов */
 
 const size_t elemcount = 100000;
 
@@ -124,7 +121,7 @@ int get_count(struct stack_t* stack){
 
 int push(struct stack_t* stack, void* val){
 	stack_h s;
-	int i;
+	int i, done = 0;
 	struct sembuf semb;
 	semb.sem_num = 0;
 	semb.sem_op = -1;
@@ -132,23 +129,28 @@ int push(struct stack_t* stack, void* val){
 	if (semop(stack->sem, &semb, 1)<0)
 		return -1;
 	s = *((stack_h*)stack->addr);
-	for (i=0; i<s.size; i++){
-		*((char*)stack->addr+s.top+i) = *((char*)val+i);
+	if (s.count<elemcount-1){
+		for (i=0; i<s.size; i++){
+			*((char*)stack->addr+s.top+i) = *((char*)val+i);
+		}
+		s.count++;
+		s.top+=s.size;
+		*((stack_h*)stack->addr) = s;
 	}
-	s.count++;
-	s.top+=s.size;
-	*((stack_h*)stack->addr) = s;
+	else {
+		done = -2;
+	}
 	semb.sem_num = 0;
 	semb.sem_op = 1;
 	semb.sem_flg = 0;
 	if (semop(stack->sem, &semb, 1)<0)
 		return 1;
-	return 0;
+	return done;
 }
 
 int pop(struct stack_t* stack, void* val){
 	stack_h s;
-	int i;
+	int i, done = 0;
 	struct sembuf semb;
 	semb.sem_num = 0;
 	semb.sem_op = -1;
@@ -156,16 +158,22 @@ int pop(struct stack_t* stack, void* val){
 	if (semop(stack->sem, &semb, 1)<0)
 		return -1;
 	s = *((stack_h*)stack->addr);
-	s.top-=s.size;
-	for (i=0; i<s.size; i++){
-		*((char*)val+i) = *((char*)stack->addr+s.top+i);
+	if (s.count>0){
+		s.top-=s.size;
+		for (i=0; i<s.size; i++){
+			*((char*)val+i) = *((char*)stack->addr+s.top+i);
+		}
+		s.count--;
+		*((stack_h*)stack->addr) = s;
 	}
-	s.count--;
-	*((stack_h*)stack->addr) = s;
+	else {
+		val=NULL;
+		done = -2;
+	}
 	semb.sem_num = 0;
 	semb.sem_op = 1;
 	semb.sem_flg = 0;
 	if (semop(stack->sem, &semb, 1)<0)
 		return 1;
-	return 0;
+	return done;
 }

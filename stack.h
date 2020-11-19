@@ -1,12 +1,14 @@
 #ifndef STACK_H
 #define STACK_H
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/sem.h>
+
 
 struct stack_t{
 	int shmem;
