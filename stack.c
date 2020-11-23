@@ -164,9 +164,9 @@ int push(struct stack_t* stack, void* val){
 		*((stack_h*)stack->addr) = s;
 	}
 	else {
-		done = -2;
+		done -= 2;
 	}
-	done = unsetSem(stack);
+	done -= unsetSem(stack);
 	return done;
 }
 
@@ -187,7 +187,7 @@ int pop(struct stack_t* stack, void* val){
 		val=NULL;
 		done = -2;
 	}
-	done = unsetSem(stack);
+	done -= unsetSem(stack);
 	return done;
 }
 

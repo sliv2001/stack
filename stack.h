@@ -1,7 +1,7 @@
 #ifndef STACK_H
 #define STACK_H
 
-#define _POSIX_C_SOURCE 199309L
+#define _POSIX_C_SOURCE 200809L
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>

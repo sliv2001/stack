@@ -1,16 +1,17 @@
 #include "stack.h"
+#include <sys/wait.h>
 
 int main(int argc, char** argv){
 	key_t key;
 	int i=0;
 	char a;
 	struct stack_t* stack;
-	pid_t pid, i1;
+	pid_t pid, i1, child;
 	key = ftok(argv[1], 0);
 	if (argc!=2)
 		return -1;
 	for (i=0; i<15; i++){
-		if (fork()==0){
+		if ((child=fork())==0){
 			stack = attach_stack(key, sizeof(pid_t));
 			if (stack == NULL) {
 				printf("sth wrong");
@@ -33,5 +34,6 @@ int main(int argc, char** argv){
 	printf("%d\n", get_count(stack));
         mark_destruct(stack);
         detach_stack(stack);
+	waitpid(child, NULL, 0);
 	return 0;
 }
