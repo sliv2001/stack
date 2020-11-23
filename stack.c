@@ -6,7 +6,7 @@ int setSem(struct stack_t* stack){
 	struct sembuf semb;
 	semb.sem_num = 0;
 	semb.sem_op = -1;
-	semb.sem_flg = 0;
+	semb.sem_flg = SEM_UNDO;
 	return (semop(stack->sem, &semb, 1));
 }
 
@@ -14,7 +14,7 @@ int unsetSem(struct stack_t* stack){
 	struct sembuf semb;
 	semb.sem_num = 0;
 	semb.sem_op = 1;
-	semb.sem_flg = 0;
+	semb.sem_flg = SEM_UNDO;
 	return (semop(stack->sem, &semb, 1));
 }
 
