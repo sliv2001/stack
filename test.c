@@ -24,12 +24,12 @@ int main(int argc, char** argv){
 				if (pop(stack, &i1)<0) printf("%d: wrong pop\n", getpid());
 				printf("%d ", i1);
 			}
-			printf("%d: pop complete; stack size = %d\n", getpid(), get_count(stack));
+			printf("\n%d: pop complete; stack size = %d\n", getpid(), get_count(stack));
 			detach_stack(stack);
 			return 0;
 		}
 	}
-	stack = attach_stack(key, 1);
+	stack = attach_stack(key, sizeof(pid_t));
 	printf("%d\n", get_count(stack));
         mark_destruct(stack);
         detach_stack(stack);
