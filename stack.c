@@ -71,7 +71,11 @@ struct stack_t* attach_stack(key_t key, int size){
 		initSem(sem);
 		wrStack(s, stack, addr);
 	}
-	setSem(stack);
+	if (setSem(stack)<0) {
+		mark_destruct(stack);
+		detach_stack(stack);
+		return NULL;
+	}
 	rdStack(&s, stack, addr);
 	s.progs++;
 	wrStack(s, stack, addr);
@@ -86,7 +90,7 @@ struct stack_t* attach_stack(key_t key, int size){
 int detach_stack(struct stack_t* stack){
 	stack_h s;
 	int a;
-	setSem(stack);
+	if (setSem(stack)<0) return -1;
 	rdStack(&s, stack, stack->addr);
 	s.progs--;
 	wrStack(s, stack, (void*)stack->addr);
@@ -102,7 +106,7 @@ int detach_stack(struct stack_t* stack){
 
 int mark_destruct(struct stack_t* stack){
 	stack_h s;
-	setSem(stack);
+	if (setSem(stack)<0) return -1;
 	rdStack(&s, stack, stack->addr);
 	s.mdestruct = 1;
 	wrStack(s, stack, (void*)stack->addr);
@@ -112,7 +116,7 @@ int mark_destruct(struct stack_t* stack){
 int get_size(struct stack_t* stack){
 	stack_h s;
 	int a;
-	setSem(stack);
+	if (setSem(stack)<0) return -1;
 	rdStack(&s, stack, stack->addr);
 	a = s.size*elemcount;
 	unsetSem(stack);
@@ -122,7 +126,7 @@ int get_size(struct stack_t* stack){
 int get_count(struct stack_t* stack){
 	stack_h s;
 	int a;
-	setSem(stack);
+	if (setSem(stack)<0) return -1;
 	rdStack(&s, stack, stack->addr);
 	a = s.count*s.size;
 	unsetSem(stack);
@@ -132,7 +136,7 @@ int get_count(struct stack_t* stack){
 int push(struct stack_t* stack, void* val){
 	stack_h s;
 	int i, done = 0;
-	setSem(stack);
+	if (setSem(stack)<0) return -1;
 	s = *((stack_h*)stack->addr);
 	if (s.count<elemcount-1){
 		for (i=0; i<s.size; i++){
@@ -145,14 +149,14 @@ int push(struct stack_t* stack, void* val){
 	else {
 		done = -2;
 	}
-	unsetSem(stack);
+	done = unsetSem(stack);
 	return done;
 }
 
 int pop(struct stack_t* stack, void* val){
 	stack_h s;
 	int i, done = 0;
-	setSem(stack);
+	if (setSem(stack)<0) return -1;
 	s = *((stack_h*)stack->addr);
 	if (s.count>0){
 		s.top-=s.size;
@@ -166,6 +170,6 @@ int pop(struct stack_t* stack, void* val){
 		val=NULL;
 		done = -2;
 	}
-	unsetSem(stack);
+	done = unsetSem(stack);
 	return done;
 }
