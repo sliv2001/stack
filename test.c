@@ -14,7 +14,7 @@ int main(int argc, char** argv){
 		if ((child=fork())==0){
 			stack = attach_stack(key, sizeof(pid_t));
 			if (stack == NULL) {
-				printf("sth wrong");
+				printf("%d: sth wrong\n", getpid());
 				return -1;
 			}
 			pid = getpid();
@@ -31,9 +31,10 @@ int main(int argc, char** argv){
 		}
 	}
 	stack = attach_stack(key, sizeof(pid_t));
-	printf("%d\n", get_count(stack));
+	waitpid(child, NULL, 0);
+	sleep(1);
+	printf("PARENT: all completed. Stack size = %d\n", get_count(stack));
         mark_destruct(stack);
         detach_stack(stack);
-	waitpid(child, NULL, 0);
 	return 0;
 }

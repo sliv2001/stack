@@ -1,6 +1,6 @@
 #include "stack.h"
 
-const size_t elemcount = 10*(2^15);
+const size_t elemcount = 100*(2^15);
 
 struct timespec TIME = {0, 0};
 int timeval=0;
@@ -153,7 +153,11 @@ int get_count(struct stack_t* stack){
 int push(struct stack_t* stack, void* val){
 	stack_h s;
 	int i, done = 0;
-	if (setSem(stack)<0) return -1;
+	if (setSem(stack)<0) {
+		unsetSem(stack);
+		printf("sem malfuncts");
+		return -1;
+	}
 	s = *((stack_h*)stack->addr);
 	if (s.count<elemcount-1){
 		for (i=0; i<s.size; i++){
@@ -164,9 +168,10 @@ int push(struct stack_t* stack, void* val){
 		*((stack_h*)stack->addr) = s;
 	}
 	else {
-		done -= 2;
+		printf("stack owerflow");
+		done = -2;
 	}
-	done -= unsetSem(stack);
+	unsetSem(stack);
 	return done;
 }
 
@@ -187,7 +192,7 @@ int pop(struct stack_t* stack, void* val){
 		val=NULL;
 		done = -2;
 	}
-	done -= unsetSem(stack);
+	unsetSem(stack);
 	return done;
 }
 
