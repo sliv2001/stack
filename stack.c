@@ -2,12 +2,29 @@
 
 const size_t elemcount = 10*(2^15);
 
+struct timespec TIME = {0, 0};
+int timeval=0;
+
 int setSem(struct stack_t* stack){
 	struct sembuf semb;
+	int done=0;
 	semb.sem_num = 0;
 	semb.sem_op = -1;
 	semb.sem_flg = SEM_UNDO;
-	return (semop(stack->sem, &semb, 1));
+	if (timeval>0&&(TIME.tv_sec>0||TIME.tv_nsec>0)){
+		semb.sem_flg|=IPC_NOWAIT;
+		if ((done=semop(stack->sem, &semb, 1))<0&&errno == EAGAIN){
+			nanosleep(&TIME, NULL);
+			return semop(stack->sem, &semb, 1);
+		}
+		if (done<0&&errno!=EAGAIN) return -1;
+	}
+	if (timeval==0)
+		return semop(stack->sem, &semb, 1);
+	if (timeval<0) {
+		semb.sem_flg |= IPC_NOWAIT;
+		return semop(stack->sem, &semb, 1);
+	}
 }
 
 int unsetSem(struct stack_t* stack){
@@ -172,4 +189,11 @@ int pop(struct stack_t* stack, void* val){
 	}
 	done = unsetSem(stack);
 	return done;
+}
+
+int set_wait(int val, struct timespec* timeout){
+	timeval = val;
+	if (timeout!=NULL)
+		TIME = *timeout;
+	return 0;
 }

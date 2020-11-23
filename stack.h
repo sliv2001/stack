@@ -1,6 +1,7 @@
 #ifndef STACK_H
 #define STACK_H
 
+#define _POSIX_C_SOURCE 199309L
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +9,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/sem.h>
-
+#include <errno.h>
+#include <time.h>
 
 struct stack_t{
 	int shmem;
@@ -55,6 +57,6 @@ val == -1 Operations return immediatly, probably with errors.
 val == 0  Operations wait infinitely.
 val == 1  Operations wait timeout time.
 */
-//int set_wait(int val, timespec* timeout);
+int set_wait(int val, struct timespec* timeout);
 
 #endif
