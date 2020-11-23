@@ -33,6 +33,7 @@ int main(int argc, char** argv){
 	stack = attach_stack(key, sizeof(pid_t));
 	waitpid(child, NULL, 0);
 	sleep(1);
+//	if (pop(stack, &i1)<0) printf("ok");
 	printf("PARENT: all completed. Stack size = %d\n", get_count(stack));
         mark_destruct(stack);
         detach_stack(stack);
