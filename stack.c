@@ -2,35 +2,29 @@
 
 const size_t elemcount = 10*(2^15);
 
-int wrStack(stack_h s, struct stack_t* stack, void* addr) {
+int setSem(struct stack_t* stack){
 	struct sembuf semb;
 	semb.sem_num = 0;
 	semb.sem_op = -1;
 	semb.sem_flg = 0;
-	if (semop(stack->sem, &semb, 1)<0)
-		return -1;
-	*((stack_h*)addr) = s;
+	return (semop(stack->sem, &semb, 1));
+}
+
+int unsetSem(struct stack_t* stack){
+	struct sembuf semb;
 	semb.sem_num = 0;
 	semb.sem_op = 1;
 	semb.sem_flg = 0;
-	if (semop(stack->sem, &semb, 1)<0)
-		return 1;
+	return (semop(stack->sem, &semb, 1));
+}
+
+int wrStack(stack_h s, struct stack_t* stack, void* addr) {
+	*((stack_h*)addr) = s;
 	return 0;
 };
 
 int rdStack(stack_h* s, struct stack_t* stack, void* addr) {
-	struct sembuf semb;
-	semb.sem_num = 0;
-	semb.sem_op = -1;
-	semb.sem_flg = 0;
-	if (semop(stack->sem, &semb, 1)<0)
-		return -1;
 	*s = *((stack_h*)addr);
-	semb.sem_num = 0;
-	semb.sem_op = 1;
-	semb.sem_flg = 0;
-	if (semop(stack->sem, &semb, 1)<0)
-		return 1;
 	return 0;
 }
 
@@ -77,9 +71,11 @@ struct stack_t* attach_stack(key_t key, int size){
 		initSem(sem);
 		wrStack(s, stack, addr);
 	}
+	setSem(stack);
 	rdStack(&s, stack, addr);
 	s.progs++;
 	wrStack(s, stack, addr);
+	unsetSem(stack);
 	if (!newStack&&size!=s.size){
 		detach_stack(addr);
 		return NULL;
@@ -89,6 +85,8 @@ struct stack_t* attach_stack(key_t key, int size){
 
 int detach_stack(struct stack_t* stack){
 	stack_h s;
+	int a;
+	setSem(stack);
 	rdStack(&s, stack, stack->addr);
 	s.progs--;
 	wrStack(s, stack, (void*)stack->addr);
@@ -97,37 +95,44 @@ int detach_stack(struct stack_t* stack){
 		return shmctl(stack->shmem, IPC_RMID, NULL);
 	}
 	else
-		return shmdt(stack->addr);
+		a = shmdt(stack->addr);
+		unsetSem(stack);
+		return a;
 }
 
 int mark_destruct(struct stack_t* stack){
 	stack_h s;
+	setSem(stack);
 	rdStack(&s, stack, stack->addr);
 	s.mdestruct = 1;
-	return wrStack(s, stack, (void*)stack->addr);
+	wrStack(s, stack, (void*)stack->addr);
+	return unsetSem(stack);
 }
 
 int get_size(struct stack_t* stack){
 	stack_h s;
+	int a;
+	setSem(stack);
 	rdStack(&s, stack, stack->addr);
-	return s.size*elemcount;
+	a = s.size*elemcount;
+	unsetSem(stack);
+	return a;
 }
 
 int get_count(struct stack_t* stack){
 	stack_h s;
+	int a;
+	setSem(stack);
 	rdStack(&s, stack, stack->addr);
-	return s.count*s.size;
+	a = s.count*s.size;
+	unsetSem(stack);
+	return a;
 }
 
 int push(struct stack_t* stack, void* val){
 	stack_h s;
 	int i, done = 0;
-	struct sembuf semb;
-	semb.sem_num = 0;
-	semb.sem_op = -1;
-	semb.sem_flg = 0;
-	if (semop(stack->sem, &semb, 1)<0)
-		return -1;
+	setSem(stack);
 	s = *((stack_h*)stack->addr);
 	if (s.count<elemcount-1){
 		for (i=0; i<s.size; i++){
@@ -140,23 +145,14 @@ int push(struct stack_t* stack, void* val){
 	else {
 		done = -2;
 	}
-	semb.sem_num = 0;
-	semb.sem_op = 1;
-	semb.sem_flg = 0;
-	if (semop(stack->sem, &semb, 1)<0)
-		return 1;
+	unsetSem(stack);
 	return done;
 }
 
 int pop(struct stack_t* stack, void* val){
 	stack_h s;
 	int i, done = 0;
-	struct sembuf semb;
-	semb.sem_num = 0;
-	semb.sem_op = -1;
-	semb.sem_flg = 0;
-	if (semop(stack->sem, &semb, 1)<0)
-		return -1;
+	setSem(stack);
 	s = *((stack_h*)stack->addr);
 	if (s.count>0){
 		s.top-=s.size;
@@ -170,10 +166,6 @@ int pop(struct stack_t* stack, void* val){
 		val=NULL;
 		done = -2;
 	}
-	semb.sem_num = 0;
-	semb.sem_op = 1;
-	semb.sem_flg = 0;
-	if (semop(stack->sem, &semb, 1)<0)
-		return 1;
+	unsetSem(stack);
 	return done;
 }
