@@ -1,6 +1,6 @@
 #include "stack.h"
 
-const size_t elemcount = 100000;
+const size_t elemcount = 10*(2^15);
 
 int wrStack(stack_h s, struct stack_t* stack, void* addr) {
 	struct sembuf semb;
