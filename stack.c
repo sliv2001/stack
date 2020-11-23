@@ -58,17 +58,21 @@ int initSem(int sem){
 
 struct stack_t* attach_stack(key_t key, int size){
 	void* addr;
-	int newStack=1;
+	int newStack=1, newSem=1;
 	struct shmid_ds str;
 	struct stack_t* stack;
 	stack_h s;
-	int sem = semget(key, 1, IPC_CREAT|0666);
+	int sem = semget(key, 1, IPC_CREAT|IPC_EXCL|0666);
 	int shmem = shmget(key, elemcount*size+sizeof(stack_h), IPC_CREAT|0666);  //здесь можно поправить длину памяти
 	if (shmem<0) {
 		return NULL;
 	}
-	if (sem<0)
-		return NULL;
+	if (sem<0){
+		sem = semget(key, 1, IPC_CREAT|0666);
+		newSem = 0;
+		if (sem<0)
+			return NULL;
+	}
 	stack = (struct stack_t*)malloc(sizeof(struct stack_t));
 	stack->shmem = shmem;
 	stack->sem = sem;
@@ -79,13 +83,14 @@ struct stack_t* attach_stack(key_t key, int size){
 		newStack=0;
 	if (addr == (void*)-1)
 		return NULL;
+	if (newSem||newStack)
+		initSem(sem);
 	if (newStack) {
 		s.size = size;
 		s.top = sizeof(stack_h);
 		s.count = 0;
 		s.progs = 0;
 		s.mdestruct = 0;
-		initSem(sem);
 		wrStack(s, stack, addr);
 	}
 	if (setSem(stack)<0) {
